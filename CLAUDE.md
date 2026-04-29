@@ -4,26 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-Addinedu 4기 최종 프로젝트 — **로봇 호텔**. 사람 손님이 묵는 호텔에 OpenArm(체크인 응대), Pinky(룸서비스 배달), OMX 3대(객실 비치)로 구성된 로봇 직원이 서비스를 제공한다.
+Addinedu 4기 최종 프로젝트 — **로봇 호텔**. 사람 손님이 묵는 호텔에 OpenArm(체크인 응대), Pinky(안내와 룸서비스 배달), OMX 3대(객실 비치)로 구성된 로봇 직원이 서비스를 제공한다.
 
 - 팀: 6명
 - 기간: 2026-04-28 ~ 2026-06-04 (약 5주)
 - 진행 단계: 시뮬레이션 검증 → 실물 이전
 - 현재 상태: 요구사항 정의 단계 (코드 미작성)
-
-## 기술 스택
-
-- **로봇/제어**: ROS2 Jazzy
-- **언어**: Python
-- **데이터베이스**: PostgreSQL 17
-- **손님 앱**: 휴대폰 웹앱
-- **직원 앱**: PyQt5 데스크톱 앱
-- **음성 입력**: 브라우저 STT (Web Speech API)
-
-## 객실 구성
-
-- 스위트룸 (8인실) × 1
-- 일반 객실 (2인실) × 1
 
 ## 시스템 구성
 
@@ -35,17 +21,14 @@ Addinedu 4기 최종 프로젝트 — **로봇 호텔**. 사람 손님이 묵는
 | 손님 인터페이스 | 휴대폰 웹앱 — 예약 확인, 음성 객실 제어, 룸서비스 주문, 모닝콜 설정, 알림 수신 |
 | 직원 인터페이스 | PyQt5 데스크톱 앱 — 예약 관리, 객실 상태 보드, 로봇 모니터링, 작업 큐, 수동 제어 |
 
-## 레포 레이아웃
-
-## 개발 명령어
-
-(코드 작성 후 채워 넣을 예정)
-
-## 컨벤션
-
-- 커밋 메시지는 한국어 사용 가능. **`Claude`, `claude`, `Co-Authored-By: Claude` 등 AI 관련 표현은 절대 포함하지 않는다.**
-- 응답·문서는 한국어로 작성하되, 영어 직역체를 피하고 자연스러운 한국어를 쓴다. (코드 주석·식별자는 영어)
-
 ## 참조 문서
 
-- 사용자 요구사항: [docs/user-requirements.md](docs/user-requirements.md)
+| 문서 | 내용 |
+|---|---|
+| [docs/folder-structure.md](docs/folder-structure.md) | 폴더 구조 / 개발 명령어 |
+| [docs/user-requirements.md](docs/user-requirements.md) | 사용자 요구사항 |
+| [docs/system-requirements.md](docs/system-requirements.md) | 시스템 요구사항 |
+| [docs/robots/omx-ai.md](docs/robots/omx-ai.md) | OMX-AI — 객실 매니퓰레이터 사양 |
+| [docs/robots/openarm.md](docs/robots/openarm.md) | OpenArm — 체크인 듀얼 암 사양 |
+| [docs/robots/vic-pinky.md](docs/robots/vic-pinky.md) | Vic Pinky — 룸서비스 모바일 베이스 사양 |
+- Confluence 동기화: [scripts/_sync_docs/CLAUDE.md](scripts/_sync_docs/CLAUDE.md)

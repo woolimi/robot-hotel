@@ -20,7 +20,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-SYNC_DIR="$SCRIPT_DIR/confluence_sync"
+SYNC_DIR="$SCRIPT_DIR/_sync_docs"
 BASE_URL="https://woolimi.atlassian.net"
 SPACE_KEY="FN"
 
@@ -33,7 +33,7 @@ fi
 
 # (page_id | URL slug | 출력 파일명 | 표시 라벨)
 PAGES=(
-  "41058328|User+Requirements|user-requirements|사용자 요구사항 (User Requirements)"
+  "41058328|User+Requirements|user-requirements|User Requirements"
   "40763414|System+Requirements|system-requirements|System Requirements"
   "41189416|System+Architecture|system-architecture|System Architecture"
   "40927273|Map|map|Map"

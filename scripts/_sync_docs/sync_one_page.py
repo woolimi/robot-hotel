@@ -32,7 +32,7 @@ from pathlib import Path
 import requests
 from dotenv import load_dotenv
 
-from build_html_md import (
+from html_md_converter import (
     transform_storage_html,
     html_to_md,
     _DRAWIO_PLACEHOLDER,
@@ -47,10 +47,7 @@ from drawio_utils import (
 SCRIPT_DIR = Path(__file__).parent.resolve()
 WS_ROOT = SCRIPT_DIR.parent.parent
 DOCS_DIR = WS_ROOT / "docs"
-ENV_CANDIDATES = [
-    SCRIPT_DIR / ".env",
-    SCRIPT_DIR.parent.parent / "jira_sync" / ".env",
-]
+ENV_FILE = WS_ROOT / ".env"
 
 
 # ─── URL 파싱 ────────────────────────────────────────────────────────
@@ -79,15 +76,13 @@ def parse_url(url: str) -> tuple[str, str, str, str]:
 # ─── 인증 ────────────────────────────────────────────────────────────
 
 def load_credentials() -> tuple[str, str]:
-    for env_path in ENV_CANDIDATES:
-        if env_path.exists():
-            load_dotenv(env_path)
-            break
+    if ENV_FILE.exists():
+        load_dotenv(ENV_FILE)
     email = os.environ.get("ATLASSIAN_EMAIL", "").strip()
     token = os.environ.get("ATLASSIAN_API_TOKEN", "").strip()
     if not email or not token:
         print("❌ ATLASSIAN_EMAIL / ATLASSIAN_API_TOKEN 가 .env 에 없습니다.")
-        print(f"   {SCRIPT_DIR / '.env.example'} 참고.")
+        print(f"   {WS_ROOT / '.env.example'} 참고.")
         sys.exit(1)
     return email, token
 

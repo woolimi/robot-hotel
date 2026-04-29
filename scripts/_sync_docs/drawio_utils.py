@@ -222,8 +222,7 @@ def drawio_to_mermaid(drawio_xml: str, diagram_name: str = "") -> str:
     lines: list[str] = []
     lines.append(f"%% AUTO-GENERATED from {diagram_name or 'drawio'}.")
     lines.append("%% drawio → mermaid 변환은 lossy 합니다.")
-    lines.append(f"%% 원본 편집은 drawio/{diagram_name} 또는")
-    lines.append(f"%% diagrams.net 에서 진행하고, 푸시는 push_diagram.py 사용.")
+    lines.append(f"%% 원본 편집은 drawio/{diagram_name} 또는 diagrams.net 에서 진행.")
     lines.append("flowchart TD")
 
     # 노드 id 는 라벨 기반이면 노이즈가 많아짐. 짧은 일관 id (n1, n2...) 를 부여하되
