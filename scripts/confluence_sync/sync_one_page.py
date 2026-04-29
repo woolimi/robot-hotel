@@ -45,11 +45,11 @@ from drawio_utils import (
 )
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
-WS_ROOT = SCRIPT_DIR.parent
+WS_ROOT = SCRIPT_DIR.parent.parent
 DOCS_DIR = WS_ROOT / "docs"
 ENV_CANDIDATES = [
     SCRIPT_DIR / ".env",
-    SCRIPT_DIR.parent / "jira_sync" / ".env",
+    SCRIPT_DIR.parent.parent / "jira_sync" / ".env",
 ]
 
 

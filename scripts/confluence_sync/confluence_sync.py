@@ -27,7 +27,7 @@ from pathlib import Path
 # ─── 설정 ───────────────────────────────────────────────────────────
 SCRIPT_DIR = Path(__file__).parent.resolve()
 CONFIG_PATH = SCRIPT_DIR / "sync_config.json"
-CONTENT_ROOT = SCRIPT_DIR.parent / "confluence_content"
+CONTENT_ROOT = SCRIPT_DIR.parent.parent / "confluence_content"
 HASH_STORE_PATH = SCRIPT_DIR / ".sync_hashes.json"
 META_DIR = SCRIPT_DIR / ".page_meta"
 

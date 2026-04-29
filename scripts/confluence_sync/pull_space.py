@@ -24,7 +24,7 @@ CONFIG_FILE = SCRIPT_DIR / "sync_config.json"
 RAW_HTML_DIR = SCRIPT_DIR / "raw_html"
 ENV_CANDIDATES = [
     SCRIPT_DIR / ".env",
-    SCRIPT_DIR.parent / "jira_sync" / ".env",  # 폴백: jira_sync 의 토큰 재사용
+    SCRIPT_DIR.parent.parent / "jira_sync" / ".env",  # 폴백: jira_sync 의 토큰 재사용
 ]
 
 

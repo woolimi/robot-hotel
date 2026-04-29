@@ -31,7 +31,7 @@ RAW_ATTACH_DIR = SCRIPT_DIR / "raw_attachments"
 MISSING_LOG = SCRIPT_DIR / ".missing_attachments.json"
 ENV_CANDIDATES = [
     SCRIPT_DIR / ".env",
-    SCRIPT_DIR.parent / "jira_sync" / ".env",  # 폴백: jira_sync 의 토큰 재사용
+    SCRIPT_DIR.parent.parent / "jira_sync" / ".env",  # 폴백: jira_sync 의 토큰 재사용
 ]
 
 
@@ -187,7 +187,7 @@ def main():
                   f"⬇{stats['downloaded']} ⏭{stats['skipped']} ✗{stats['failed']}")
 
     print(f"\n총합: 신규 {total['downloaded']} / 스킵 {total['skipped']} / 실패 {total['failed']}")
-    print(f"📂 저장 위치: {RAW_ATTACH_DIR.relative_to(SCRIPT_DIR.parent)}")
+    print(f"📂 저장 위치: {RAW_ATTACH_DIR.relative_to(SCRIPT_DIR.parent.parent)}")
     print("👉 다음 단계: python build_html_md.py 실행해서 HTML/MD 갱신\n")
 
 

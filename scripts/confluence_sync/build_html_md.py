@@ -28,7 +28,7 @@ from drawio_utils import (
 )
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
-WS_ROOT = SCRIPT_DIR.parent
+WS_ROOT = SCRIPT_DIR.parent.parent
 CONFIG_FILE = SCRIPT_DIR / "sync_config.json"
 RAW_HTML_DIR = SCRIPT_DIR / "raw_html"
 RAW_ATTACH_DIR = SCRIPT_DIR / "raw_attachments"

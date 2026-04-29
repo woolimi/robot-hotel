@@ -30,7 +30,7 @@ from confluence_sync import (
 )
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
-WS_ROOT = SCRIPT_DIR.parent
+WS_ROOT = SCRIPT_DIR.parent.parent
 CONFIG_FILE = SCRIPT_DIR / "sync_config.json"
 CONTENT_ROOT = WS_ROOT / "confluence_content"
 ENV_FILE = SCRIPT_DIR / ".env"
