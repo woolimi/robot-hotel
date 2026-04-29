@@ -242,7 +242,6 @@ def main():
     config["space_id"] = space_id
     config["space_name"] = space_root
     config["homepage_id"] = homepage_id
-    config["local_root"] = "../confluence_content"
     config["page_tree"] = tree
     config["_last_synced_target"] = current_fp
 
