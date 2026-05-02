@@ -206,12 +206,19 @@ class HTMLToMarkdown(HTMLParser):
         elif tag == "ol":
             self.list_stack.append("ol"); self.list_counters.append(0)
         elif tag == "li":
-            indent = "  " * max(0, len(self.list_stack) - 1)
-            if self.list_stack and self.list_stack[-1] == "ol":
-                self.list_counters[-1] += 1
-                self.out.append(f"\n{indent}{self.list_counters[-1]}. ")
+            if self.in_cell:
+                # 표 셀 안의 리스트는 마커 없이 텍스트만 셀에 누적.
+                # Confluence 가 셀의 "-" 한 글자를 <ul><li></li></ul> 로 변환해 저장하는 경우가 있어,
+                # 셀 바깥(self.out)으로 빈 "- " 가 새지 않도록 한다.
+                if self.current_cell and not self.current_cell.endswith(" "):
+                    self.current_cell += " "
             else:
-                self.out.append(f"\n{indent}- ")
+                indent = "  " * max(0, len(self.list_stack) - 1)
+                if self.list_stack and self.list_stack[-1] == "ol":
+                    self.list_counters[-1] += 1
+                    self.out.append(f"\n{indent}{self.list_counters[-1]}. ")
+                else:
+                    self.out.append(f"\n{indent}- ")
         elif tag == "br": self._emit("  \n")
         elif tag == "table":
             self.in_table = True; self.table_rows = []
@@ -252,7 +259,7 @@ class HTMLToMarkdown(HTMLParser):
         elif tag in ("ul", "ol"):
             if self.list_stack: self.list_stack.pop()
             if self.list_counters: self.list_counters.pop()
-            if not self.list_stack: self.out.append("\n")
+            if not self.list_stack and not self.in_cell: self.out.append("\n")
         elif tag in ("td", "th"):
             self.in_cell = False
             self.current_row.append(self.current_cell.strip().replace("\n", " "))

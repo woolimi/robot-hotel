@@ -4,7 +4,7 @@
 
 URL → page_id 추출 → REST API 로 페이지 1건만 가져와서:
   - docs/<sanitized-title>.md          (frontmatter + 본문)
-  - docs/<sanitized-title>.assets/     (이미지 / drawio / mermaid 리소스)
+  - docs/<sanitized-title>.assets/     (이미지 / drawio 리소스)
 
 첨부 다운로드는 임시 디렉토리에서 진행하고 종료 시 자동 삭제.
 파일이 이미 존재하면 덮어쓴다 (frontmatter 의 confluence_version 으로 추적).
@@ -39,7 +39,6 @@ from html_md_converter import (
 )
 from drawio_utils import (
     find_drawio_macros,
-    drawio_to_mermaid,
     find_drawio_source,
     find_drawio_preview,
 )
@@ -156,8 +155,9 @@ def download_attachment(
 # ─── 메인 변환 로직 ─────────────────────────────────────────────────
 
 def _drawio_base(name: str) -> str:
-    base = name[:-7] if name.endswith(".drawio") else name
-    return sanitize_filename(base)
+    """drawio 파일의 베이스 이름 — 매크로 안의 `diagram-name` 과 어긋나지 않도록
+    sanitize 하지 않고 원본 이름 (공백 포함) 을 그대로 보존."""
+    return name[:-7] if name.endswith(".drawio") else name
 
 
 def build_markdown(
@@ -177,7 +177,7 @@ def build_markdown(
             if f.is_file():
                 attachment_map[f.name] = f"{assets_rel}/{f.name}"
 
-    # 2) drawio 매크로 → 리소스 + mermaid 생성, storage HTML 의 매크로 블록은 placeholder 로 치환
+    # 2) drawio 매크로 → 리소스 저장, storage HTML 의 매크로 블록은 placeholder 로 치환
     macros = find_drawio_macros(storage_html)
     diagrams: list[dict] = []
     modified_html = storage_html
@@ -191,19 +191,11 @@ def build_markdown(
             shutil.copy2(src, assets_dir / f"{base_name}.drawio")
         if preview:
             shutil.copy2(preview, assets_dir / f"{base_name}.png")
-
-        xml = ""
-        if src:
-            try:
-                xml = src.read_text(encoding="utf-8", errors="replace")
-            except Exception:
-                xml = ""
-        mmd_text = drawio_to_mermaid(xml, mac.diagram_name) if xml else (
-            f"%% {mac.diagram_name} — drawio 원본 없음 (placeholder).\n"
-            f"flowchart TD\n"
-            f"    todo[\"{mac.diagram_name}\"]\n"
+        # 원본 매크로 storage XML 을 sidecar 로 보존 — push 시 그대로 splice 해서
+        # ADF extension UUID 등을 재생성하지 않아도 라운드트립이 가능.
+        (assets_dir / f"{base_name}.macro.xml").write_text(
+            mac.raw_block, encoding="utf-8"
         )
-        (assets_dir / f"{base_name}.mmd").write_text(mmd_text, encoding="utf-8")
 
         ph = _DRAWIO_PLACEHOLDER.format(n=idx)
         modified_html = modified_html.replace(mac.raw_block, ph, 1)
@@ -213,7 +205,6 @@ def build_markdown(
             "base": base_name,
             "has_preview": preview is not None,
             "has_source": src is not None,
-            "mermaid_text": mmd_text,
         })
 
     # 3) storage HTML → 일반 HTML
@@ -230,7 +221,7 @@ def build_markdown(
 
     md_body = html_to_md(plain_html)
 
-    # 5) 토큰 자리에 mermaid + 이미지 블록 삽입
+    # 5) 토큰 자리에 이미지 + drawio 링크 블록 삽입
     for d in diagrams:
         idx = d["idx"]
         base_name = d["base"]
@@ -243,11 +234,9 @@ def build_markdown(
             f"[📐 {base_name}.drawio]({assets_rel}/{base_name}.drawio)"
             if d["has_source"] else "(원본 없음)"
         )
-        mmd_block = "```mermaid\n" + d["mermaid_text"].rstrip() + "\n```"
         block = (
             f"\n\n{img_line}\n\n"
             f"📐 **{name}** — {drawio_ref}\n\n"
-            f"{mmd_block}\n\n"
         )
         md_body = md_body.replace(md_tokens[idx], block)
 
@@ -314,6 +303,9 @@ def main():
             page, page_id, raw_attach, assets_dir, assets_rel,
         )
 
+    # body 가 이미 H1 으로 시작하면 페이지 제목 H1 을 추가하지 않는다 (중복 제목 방지).
+    title_h1 = "" if md_body.lstrip().startswith("# ") else f"# {title}\n\n"
+
     # frontmatter
     md_full = (
         "---\n"
@@ -323,7 +315,7 @@ def main():
         f"confluence_version: {version}\n"
         f'last_synced: "{datetime.datetime.now().isoformat(timespec="seconds")}"\n'
         "---\n\n"
-        f"# {title}\n\n"
+        f"{title_h1}"
         f"{md_body.rstrip()}\n"
     )
     md_path.write_text(md_full, encoding="utf-8")
