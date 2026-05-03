@@ -1,3 +1,0 @@
-requests
-python-dotenv
-mistune>=3.0

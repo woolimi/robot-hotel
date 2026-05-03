@@ -183,8 +183,9 @@ def build_markdown(
     modified_html = storage_html
     for idx, mac in enumerate(macros):
         base_name = _drawio_base(mac.diagram_name)
-        src = find_drawio_source(raw_attach_dir, mac.diagram_name)
-        preview = find_drawio_preview(raw_attach_dir, mac.diagram_name)
+        # 첨부 탐색은 실제 Confluence 파일명(attachment_name)으로, 출력은 diagram_name(표시명)으로.
+        src = find_drawio_source(raw_attach_dir, mac.attachment_name)
+        preview = find_drawio_preview(raw_attach_dir, mac.attachment_name)
 
         assets_dir.mkdir(parents=True, exist_ok=True)
         if src:

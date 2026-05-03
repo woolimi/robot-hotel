@@ -10,7 +10,9 @@ Confluence 와 양방향 동기화되는 설계 문서.
 | [user-requirements.md](user-requirements.md) | 사용자 요구사항 (UR) |
 | [system-requirements.md](system-requirements.md) | 시스템 요구사항 (SR) |
 | [system-architecture.md](system-architecture.md) | 시스템 아키텍처 |
-| [implementation-plan.md](implementation-plan.md) | 구현 명세 — 각 SR 의 무엇을 어떻게 |
+| [implementation-plan.md](implementation-plan.md) | 구현 명세 — 각 SR 의 무엇을 어떻게 (구현 완료 시 implemented.md 로 이동, 규칙은 루트 [CLAUDE.md](../CLAUDE.md)) |
+| [implemented.md](implemented.md) | 구현 완료된 SR 모음 (Confluence 미연동) |
+| [erd.md](erd.md) | DB ERD — PostgreSQL 스키마 (엔티티·관계·draw.io) |
 | [tech-stack.md](tech-stack.md) | 추상 동사 → 라이브러리·모델 매핑 |
 | [robots/openarm.md](robots/openarm.md) | OpenArm — EduPing 하드웨어 사양 |
 | [robots/vic-pinky.md](robots/vic-pinky.md) | Vic Pinky — GogoPing 하드웨어 사양 |

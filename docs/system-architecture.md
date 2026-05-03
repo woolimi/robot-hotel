@@ -2,8 +2,8 @@
 confluence_page_id: "41189416"
 confluence_url: "https://woolimi.atlassian.net/wiki/spaces/FN/pages/41189416/System+Architecture"
 title: "System Architecture"
-confluence_version: 46
-last_synced: "2026-05-04T00:17:33"
+confluence_version: 48
+last_synced: "2026-05-04T16:58:23"
 ---
 
 # System Architecture
@@ -19,15 +19,15 @@ last_synced: "2026-05-04T00:17:33"
 ## Hardware Architecture
 
 
-![Untitled Diagram-1777461129023.drawio](system-architecture.assets/Untitled Diagram-1777461129023.png)
+_(프리뷰 없음: hardware-architecture.drawio)_
 
-📐 **Untitled Diagram-1777461129023.drawio** — [📐 Untitled Diagram-1777461129023.drawio](system-architecture.assets/Untitled Diagram-1777461129023.drawio)
+📐 **hardware-architecture.drawio** — (원본 없음)
 
 
 
 ## Software Architecture
 
 
-![Untitled Diagram-1777624819005.drawio](system-architecture.assets/Untitled Diagram-1777624819005.png)
+_(프리뷰 없음: software-architecture.drawio)_
 
-📐 **Untitled Diagram-1777624819005.drawio** — [📐 Untitled Diagram-1777624819005.drawio](system-architecture.assets/Untitled Diagram-1777624819005.drawio)
+📐 **software-architecture.drawio** — (원본 없음)

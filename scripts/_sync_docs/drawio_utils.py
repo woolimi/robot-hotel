@@ -20,7 +20,8 @@ from pathlib import Path
 class DrawioMacro:
     """페이지 안의 drawio 임베드 한 개."""
     kind: str               # "drawio" | "inc-drawio"
-    diagram_name: str       # 첨부 파일 이름 (확장자 포함된 경우 그대로)
+    diagram_name: str       # 출력 파일 베이스명 (display-name 우선)
+    attachment_name: str    # Confluence 실제 첨부 파일명 — 첨부 탐색에 사용
     width: str | None = None
     height: str | None = None
     raw_block: str = ""     # 매크로 블록 원본 — replace 시 사용
@@ -31,6 +32,9 @@ _PARAM_RE = re.compile(
     re.DOTALL,
 )
 _EXT_BLOCK_RE = re.compile(r"<ac:adf-extension\b.*?</ac:adf-extension>", re.DOTALL)
+# guest-params 중첩 구조 안의 diagram-name 을 직접 추출 — _extract_params 의 비탐욕 매칭이
+# 중첩 태그를 삼켜 diagram-name 키가 params 에 들어오지 않는 문제를 우회한다.
+_DIAGRAM_NAME_RE = re.compile(r'key="diagram-name">([^<]+)</ac:adf-parameter>')
 
 
 def _extract_params(block: str) -> dict[str, str]:
@@ -64,14 +68,21 @@ def find_drawio_macros(storage_html: str) -> list[DrawioMacro]:
             if m_attr:
                 ext_marker = m_attr.group(1).strip()
 
+        # guest-params 안의 실제 첨부 파일명 (diagram-name) 을 직접 추출.
+        # _extract_params 의 비탐욕 매칭은 중첩 구조 탓에 이 키를 꺼내지 못한다.
+        dn_match = _DIAGRAM_NAME_RE.search(block)
+        raw_attach_name = dn_match.group(1).strip() if dn_match else None
+
         if "inc-drawio" in ext_marker:
             kind = "inc-drawio"
             name = (params.get("diagram-display-name")
                     or params.get("guest-params") or "").strip()
         elif "drawio" in ext_marker:
             kind = "drawio"
-            name = (params.get("diagram-name")
-                    or params.get("diagram-display-name") or "").strip()
+            # diagram-display-name = 사용자가 변경한 표시명, diagram-name = 실제 첨부명.
+            # 출력 파일명은 표시명 우선, 없으면 실제 첨부명으로 fallback.
+            name = (params.get("diagram-display-name")
+                    or raw_attach_name or "").strip()
         else:
             continue
 
@@ -88,6 +99,7 @@ def find_drawio_macros(storage_html: str) -> list[DrawioMacro]:
         out.append(DrawioMacro(
             kind=kind,
             diagram_name=name,
+            attachment_name=raw_attach_name or name,
             width=params.get("width"),
             height=params.get("height"),
             raw_block=block,

@@ -14,5 +14,5 @@ PAGES=(
   "40992866|Sequence+Diagram|sequence-diagram|Sequence Diagram"
   "41189397|GUI|gui|GUI"
   "40927292|State+Diagram|state-diagram|State Diagram"
-  "40763394|Directory+Structure|directory-structure|Directory Structure"
+  "40763394|Folder+Structure|folder-structure|Folder Structure"
 )

@@ -1,3 +1,11 @@
+---
+confluence_page_id: "40763394"
+confluence_url: "https://woolimi.atlassian.net/wiki/spaces/FN/pages/40763394/Folder+Structure"
+title: "Folder Structure"
+confluence_version: 5
+last_synced: "2026-05-04T09:35:56"
+---
+
 # 폴더 구조
 
 ```
@@ -26,52 +34,59 @@ pingdergarten/
 │   ├── _sync_docs/                   # 동기화 모듈 (Python)
 │   ├── server-up.sh                  # docker compose up -d (control / ai / postgres / minio)
 │   ├── server-down.sh                # docker compose down
+│   ├── run_server.sh                 # tmux 로 Control + AI Hub 동시 실행 (개발용, docker 미사용 시)
 │   ├── db-seed.sh                    # alembic upgrade head + 31일치 menu / named pose seed 주입
 │   ├── ui-robot.sh                   # 인자로 eduping/gogoping/noriarm 받아 VITE_ROBOT 분기 후 vite dev
-│   ├── ui-parent.sh                  # parent-ui vite dev
-│   ├── ui-educator.sh                # python -m educator_app
+│   ├── ui-portal.sh                  # portal-ui vite dev
+│   ├── ui-admin.sh                   # python -m admin_app
 │   ├── device-gogoping-pi.sh         # GogoPing 라즈베리파이 — vicpinky_bringup (모터·LiDAR)
 │   ├── device-gogoping-laptop.sh     # GogoPing 노트북 — Nav2/SLAM + OMX + gogoping_* 응용 + 비전
 │   ├── device-eduping.sh             # EduPing 노트북 (단일) — OpenArm + 비전 + eduping_* 응용
 │   └── device-noriarm.sh             # NoriArm 노트북 (단일) — OMX + 비전 + noriarm_* 응용
 │
 ├── ui/
-│   ├── robot-ui/                     # React + Vite 단일 코드베이스 (eduping/gogoping/noriarm 분기)
+│   ├── robot-ui/                     # Vue 3 + Vite 단일 코드베이스 (eduping/gogoping/noriarm 분기)
 │   │   ├── src/
 │   │   │   ├── common/               # 호출어·STT·TTS·표정·모드 셀렉터·자연어 디스패처·인접 정지 표시기
-│   │   │   ├── eduping/              # 율동·가게놀이·정리정돈·무궁화꽃 (React.lazy)
+│   │   │   ├── composables/          # useSTT·useTTS·useVoiceController·useIntentDispatch
+│   │   │   ├── stores/               # voice·mode (Pinia)
+│   │   │   ├── config/               # robots.ts (VITE_ROBOT 분기)
+│   │   │   ├── eduping/              # 율동·가게놀이·정리정돈·무궁화꽃 (defineAsyncComponent)
 │   │   │   ├── gogoping/             # 등원·하원·보조·숨바꼭질·자장가 + 지도 위젯
 │   │   │   └── noriarm/              # 블럭쌓기·정리
-│   │   ├── public/audio/             # mp3 (율동·자장가·무궁화꽃 노래)
+│   │   ├── public/
+│   │   │   ├── audio/                # mp3 (율동·자장가·무궁화꽃 노래)
+│   │   │   └── emotions/             # pinky_pro WebP (Apache-2.0, NOTICE.md 동봉)
+│   │   ├── mock/                     # vite plugin: /api/* mock (Control Service 붙기 전 임시)
 │   │   ├── package.json
 │   │   └── vite.config.ts
-│   ├── parent-ui/                    # React + Vite (학부모 단독 웹앱)
+│   ├── portal-ui/                    # Vue 3 + Vite (학부모·교사 공용 웹앱)
 │   │   ├── src/
 │   │   ├── package.json
 │   │   └── vite.config.ts
-│   └── educator-ui/                  # PyQt5 데스크톱 앱
-│       ├── educator_app/
-│       │   ├── views/                # 등록·출결·정보·로봇 상태·보조 모드 UI
-│       │   ├── api/                  # requests Session + websocket-client
-│       │   └── camera/               # cv2/QCamera 등록 캡처
+│   └── admin-ui/                     # PyQt5 데스크톱 앱 (로봇 관제 전용)
+│       ├── admin_app/
+│       │   ├── views/                # 로봇 상태 대시보드·보조 모드 제어 UI
+│       │   └── api/                  # requests Session + websocket-client
 │       └── pyproject.toml
 │
 ├── server/
 │   ├── control/                      # FastAPI + rclpy + fastapi-users
-│   │   ├── pingdergarten_control/
-│   │   │   ├── api/                  # REST 엔드포인트
-│   │   │   ├── ws/                   # /ws/robot-state
-│   │   │   ├── ros/                  # rclpy 게이트웨이
-│   │   │   ├── auth/                 # fastapi-users
-│   │   │   └── jobs/                 # ai_job enqueue
+│   │   ├── main.py                   # REST 엔드포인트 (Robot UI 진입점)
+│   │   ├── config.py                 # env 설정 (AI Hub URL 등)
+│   │   ├── ws.py                     # (TBD) /ws/robot-state
+│   │   ├── ros_bridge.py             # (TBD) rclpy 게이트웨이
+│   │   ├── auth.py                   # (TBD) fastapi-users
+│   │   ├── jobs.py                   # (TBD) ai_job enqueue
 │   │   ├── Dockerfile
 │   │   └── pyproject.toml
 │   ├── ai/                           # FastAPI api 프로세스 + worker 프로세스
-│   │   ├── pingdergarten_ai/
-│   │   │   ├── hub.py                # api 프로세스 (의도 분류 동기)
-│   │   │   ├── worker.py             # ai_job 폴링
-│   │   │   ├── vision/               # 얼굴 인식
-│   │   │   └── llm/                  # Ollama 호출 (의도 분류 + 보고서)
+│   │   ├── hub.py                    # api 프로세스 (의도 분류 동기)
+│   │   ├── llm.py                    # Ollama 호출 (의도 분류 + 보고서)
+│   │   ├── config.py                 # env 설정
+│   │   ├── robots.py                 # 로봇별 모드 카탈로그
+│   │   ├── worker.py                 # (TBD) ai_job 폴링
+│   │   ├── vision/                   # (TBD) 얼굴 인식
 │   │   ├── Dockerfile
 │   │   └── pyproject.toml
 │   └── db/                           # PostgreSQL + MinIO 데이터 계층
@@ -133,8 +148,8 @@ pingdergarten/
 | EduPing | 노트북 단독 | OpenArm USB 직결 + 비전 + `eduping_*` 응용 |
 | NoriArm | 노트북 단독 | OMX USB 직결 + 비전 + `noriarm_*` 응용 |
 | Control / AI Server | 별도 호스트 (docker-compose) | control + ai + postgres + minio |
-| Educator UI | 교사 PC | PyQt5 데스크톱 앱 |
-| Parent UI | 학부모 모바일/PC | 같은 Wi-Fi LAN IP 로 접근 (Vite dev) |
+| Portal UI | 학부모·교사 모바일/PC | 같은 Wi-Fi LAN IP 로 접근 (Vite dev) |
+| Admin UI | 관리자 PC | PyQt5 데스크톱 앱 |
 
 GogoPing 의 라즈베리파이와 노트북은 같은 `ROS_DOMAIN_ID` 로 토픽을 공유한다.
 
@@ -159,8 +174,8 @@ scripts/db-seed.sh                         # 마이그레이션 + seed
 
 # UI
 scripts/ui-robot.sh eduping                # 또는 gogoping / noriarm
-scripts/ui-parent.sh
-scripts/ui-educator.sh
+scripts/ui-portal.sh
+scripts/ui-admin.sh
 
 # 디바이스 1회 셋업 — README 의 단계별 명령 (apt install + git submodule init + colcon build) 을 따라 수동 실행
 

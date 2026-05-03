@@ -2,8 +2,8 @@
 confluence_page_id: "48332818"
 confluence_url: "https://woolimi.atlassian.net/wiki/spaces/FN/pages/48332818/Implementation+Plan"
 title: "Implementation Plan"
-confluence_version: 2
-last_synced: "2026-05-04T00:17:21"
+confluence_version: 7
+last_synced: "2026-05-04T13:33:23"
 ---
 
 # 구현 계획 (Implementation Plan)
@@ -12,9 +12,9 @@ last_synced: "2026-05-04T00:17:21"
 
 | UI | 프레임워크 | 역할 |
 | --- | --- | --- |
-| Robot UI (EduPing·GogoPing·NoriArm 공유) | React + Vite dev server (Chromium kiosk) + Web Speech API (STT/TTS), 단일 코드베이스 — 각 로봇 노트북에서 `VITE_ROBOT=eduping/gogoping/noriarm` env 로 분기 인스턴스 실행, `server.proxy` 로 `/api/*` → Control Service REST (rosbridge·roslibjs·Nginx 미사용) | 공통 hooks/components (호출어·STT·TTS·표정·모드 셀렉터·자연어 디스패처). 로봇별 모드 화면은 React.lazy 로 lazy load. 모드 매트릭스는 §0.2. 자연 촬영은 ROS2 노드가 단독 처리 (SR-PHOTO-001) |
-| Educator UI | PyQt5 데스크톱 앱 (Python 3.11 + PyQt5 + requests + websocket-client + cv2/QCamera). Control Service REST 경유 (`requests.Session()` cookie jar 로 fastapi-users 세션 쿠키 유지) + WebSocket `/ws/robot-state` 로 로봇 상태 push 수신. MinIO presigned URL 은 `requests.get` 으로 직접 GET (proxy 불필요). ROS2 직접 통신 안 함 | 등록, 출결, 정보 보기 (점심메뉴·자녀·학부모·일일 보고서), 로봇 상태 표시, 보조 모드 UI 제어 |
-| Parent Web | React + Vite dev server (학부모 단독 앱), `server.proxy` 로 `/api/*` → Control Service, `/photos/*` → MinIO | 로그인, 등·하원·메뉴·사진·보고서 조회. 학부모 모바일은 같은 Wi-Fi LAN IP 로 접근 |
+| Robot UI (EduPing·GogoPing·NoriArm 공유) | Vue 3 + Vite dev server (Chromium kiosk) + Pinia + Web Speech API (STT/TTS), 단일 코드베이스 — 각 로봇 노트북에서 `VITE_ROBOT=eduping/gogoping/noriarm` env 로 분기 인스턴스 실행, `server.proxy` 로 `/api/*` → Control Service REST (rosbridge·roslibjs·Nginx 미사용) | 공통 composables/components (호출어·STT·TTS·표정·모드 셀렉터·자연어 디스패처). 로봇별 모드 화면은 `defineAsyncComponent` 로 lazy load. 모드 매트릭스는 §0.2. 자연 촬영은 ROS2 노드가 단독 처리 (SR-PHOTO-001) |
+| Admin UI | PyQt5 데스크톱 앱 (Python 3.11 + PyQt5 + requests + websocket-client). Control Service REST 경유 (`requests.Session()` cookie jar 로 fastapi-users 세션 쿠키 유지) + WebSocket `/ws/robot-state` 로 로봇 상태 push 수신. ROS2 직접 통신 안 함 | 로봇 관제 — 위치·배터리·모드·작업 상태 실시간 모니터링 (SR-ADM-001), 보조 모드 UI 제어 (추종 대상 확정·정지·지도 기반 목적지 지정·도착 알림, SR-ADM-002~005) |
+| Portal Web | Vue 3 + Vite dev server (학부모·교사 공용 웹앱) + Pinia, `server.proxy` 로 `/api/*` → Control Service, `/photos/*` → MinIO | 교사 기능 (아동·학부모 등록, 출결 보드, 정보·보고서 보기), 학부모 기능 (로그인·등·하원·메뉴·사진·보고서 조회). 학부모·교사 모바일/PC 에서 같은 Wi-Fi LAN IP 로 접근 |
 
 ## 0.1 로봇 UI 모드
 
@@ -38,7 +38,7 @@ last_synced: "2026-05-04T00:17:21"
 | GogoPing UI | 하원 | ✓ | ✓ | ✗ | ✓ | hello |
 | GogoPing UI | 보조 | ✓ | ✓ | ✗ | ✓ | basic |
 | GogoPing UI | 숨바꼭질 | ✓ | ✓ | ✓ | ✓ | fun |
-| GogoPing UI | 자장가 | ✓ | ✓ | ✗ | ✗ | sleeping |
+| GogoPing UI | 자장가 | ✓ | ✓ | ✗ | ✗ | sleep |
 | NoriArm UI | 대기 | ✓ | ✓ | ✗ | ✗ | basic |
 | NoriArm UI | 블럭쌓기 | ✓ | ✓ | ✓ | ✓ | interest |
 | NoriArm UI | 정리 | ✓ | ✓ | ✗ | ✓ | interest |
@@ -47,7 +47,8 @@ last_synced: "2026-05-04T00:17:21"
 
 | 자원 | 종류 |
 | --- | --- |
-| pinky_emotion 의 gif | basic / hello / happy / fun / interest / bored / sad / angry / sleeping |
+| pinky_pro 의 emotion gif (WebP 변환) | basic / hello / happy / fun / interest / bored / sad / angry — 출처: pinklab-art/pinky_pro, Apache-2.0, 600×450 resize + WebP lossy q=80 으로 변환 |
+| 추가 표정 | sleep — 별도 자원 (`ui/robot-ui/public/emotions/sleep.webp`), GogoPing 자장가 모드 default. pinky_pro 에 sleeping 이 없어 외부에서 별도 추가 |
 
 ## 0.4 디바이스 점유
 
@@ -58,7 +59,7 @@ last_synced: "2026-05-04T00:17:21"
 | 노트북 웹캠 | ROS2 노드 (`cv_camera` 등) | 얼굴 인식·객체 인식·사람 추적·자세 인식·감정 인식·자연 촬영. ROS2 토픽으로 프레임 발행, 같은 호스트 노드들이 공유 (DDS shared memory / loopback) |
 | Top Camera | ROS2 노드 | EduPing/NoriArm Top 카메라 — 객체 인식·자세 인식 |
 | Gripper Camera | ROS2 노드 | 픽업 직전 정밀 검증 |
-| 등록 카메라 | 교사앱 (PyQt5 cv2/QCamera) | 등록 화면에서 노트북 웹캠을 임시 점유 (운영 시간 외) 또는 별도 USB 카메라 |
+| 등록 카메라 | 브라우저 (WebRTC, Portal UI) | 등록 화면에서 웹캠을 임시 점유 (운영 시간 외) 또는 별도 USB 카메라 |
 
 ## 1. EduPing UI (Robot UI 코드베이스의 `VITE_ROBOT=eduping` 인스턴스, OpenArm + Laptop)
 
@@ -122,12 +123,12 @@ last_synced: "2026-05-04T00:17:21"
 
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
-| SR-CAR-001 | 추종 대상 확인 | 교사앱 "추종 시작" 버튼이 눌리면 GogoPing 노트북 디스플레이 + 음성 합성 으로 얼굴 보여달라는 안내를 출력, 노트북 웹캠으로 캡처 후 얼굴 인식 으로 등록 교사와 매칭, 디스플레이 + 음성 합성 으로 확인 멘트 ("○○선생님 맞아요?") 와 UI 확인 버튼 ("맞음" / "다시") 을 표시한 뒤 클릭으로 추종 대상을 확정한다. 매칭 실패 시 "얼굴이 잘 안 보여요. 다시 보여주세요" 안내 후 재캡처 (3회 한도). 3회 실패 시 추종 대상 확정을 취소하고 대기 상태로 복귀한다. | High |
+| SR-CAR-001 | 추종 대상 확인 | Admin UI "추종 시작" 버튼이 눌리면 GogoPing 노트북 디스플레이 + 음성 합성 으로 얼굴 보여달라는 안내를 출력, 노트북 웹캠으로 캡처 후 얼굴 인식 으로 등록 교사와 매칭, 디스플레이 + 음성 합성 으로 확인 멘트 ("○○선생님 맞아요?") 와 UI 확인 버튼 ("맞음" / "다시") 을 표시한 뒤 클릭으로 추종 대상을 확정한다. 매칭 실패 시 "얼굴이 잘 안 보여요. 다시 보여주세요" 안내 후 재캡처 (3회 한도). 3회 실패 시 추종 대상 확정을 취소하고 대기 상태로 복귀한다. | High |
 | SR-CAR-002 | 교사 추종 | GogoPing 이 노트북 웹캠 + 사람 추적 (Deep SORT/OSNet ReID) 으로 추종 대상 1인의 방위를 잠그고, RPLiDAR C1 으로 그 방위의 거리를 측정해 거리 제어 로 따라간다. LiDAR 임계 거리 이하 진입 시 즉시 정지 (SR-SAF-006). | High |
-| SR-CAR-003 | 정지·대기 입력 | 교사앱 "정지" 버튼 또는 호출어 후속 정지 의도 음성 명령이 진행 중인 동작(추종/자율 주행 등)을 중단하고 대기 상태로 전이시킨다. | High |
-| SR-CAR-004 | 운반 요청 수신 | 교사앱이 SLAM 맵 + nav graph named pose 를 시각화한 지도 위젯을 표시하고, 교사가 맵 위에서 목적지를 클릭하면 named pose 를 Control Server REST 로 전달해 Control Server 가 ROS2 /carry/deliver 액션 send_goal 을 보낸다. | High |
+| SR-CAR-003 | 정지·대기 입력 | Admin UI "정지" 버튼 또는 호출어 후속 정지 의도 음성 명령이 진행 중인 동작(추종/자율 주행 등)을 중단하고 대기 상태로 전이시킨다. | High |
+| SR-CAR-004 | 운반 요청 수신 | Admin UI 가 SLAM 맵 + nav graph named pose 를 시각화한 지도 위젯을 표시하고, 교사가 맵 위에서 목적지를 클릭하면 named pose 를 Control Server REST 로 전달해 Control Server 가 ROS2 /carry/deliver 액션 send_goal 을 보낸다. | High |
 | SR-CAR-005 | 자율 주행 | GogoPing 이 RPLiDAR C1 + 자율 주행 으로 사전 SLAM 맵·nav graph 위에서 지정 목적지까지 이동한다. | High |
-| SR-CAR-006 | 도착 알림 | ROS2 액션 결과 콜백이 GogoPing 노트북 스피커 음성 합성 으로 도착을 알린다. 교사앱은 별도 토스트·사운드 없이 SR-OPS-019 의 로봇 상태 위젯 갱신으로 도착을 인지한다. | High |
+| SR-CAR-006 | 도착 알림 | ROS2 액션 결과 콜백이 GogoPing 노트북 스피커 음성 합성 으로 도착을 알린다. Admin UI 는 SR-ADM-001 로봇 상태 위젯 갱신 + SR-ADM-005 도착 알림으로 인지한다. | High |
 | SR-CAR-007 | 운반 후 대기 | GogoPing 이 운반 액션 완료 후 그 자리에서 대기 상태로 전이한다. | Low |
 | SR-SAF-006 | 추종 거리 유지 | GogoPing 이 RPLiDAR C1 으로 카메라 ReID 가 잠근 방위의 거리를 측정해 거리 변동에 따라 속도·정지를 결정한다. 카메라는 추종 대상 식별, LiDAR 는 거리 측정으로 책임 분담. | High |
 
@@ -135,11 +136,11 @@ last_synced: "2026-05-04T00:17:21"
 
 | 단계 | 트리거 | 동작 | 표정 | 다음 단계 |
 | --- | --- | --- | --- | --- |
-| 대기 | 보조 모드 진입 또는 UI "정지" 클릭 | 그 자리 대기 | basic | 추종 대상 확인 / 운반 중 |
-| 추종 대상 확인 | UI "추종 시작" 클릭 | SR-CAR-001 절차 (얼굴 보여달라 안내 → 캡처 → 매칭 → 확인 멘트 → UI 확인 버튼 클릭, 매칭 실패 시 3회 한도 재캡처) | interest | (확정) 추종 / (거부) 대기 / (3회 매칭 실패) 대기 |
-| 추종 | 추종 대상 확정 | 노트북 웹캠 + 사람 추적 + 거리 제어 로 교사 추종 | happy | 대기 (UI "정지" 클릭) / Searching (시야 로스트) |
+| 대기 | 보조 모드 진입 또는 Admin UI "정지" 클릭 | 그 자리 대기 | basic | 추종 대상 확인 / 운반 중 |
+| 추종 대상 확인 | Admin UI "추종 시작" 클릭 | SR-CAR-001 절차 (얼굴 보여달라 안내 → 캡처 → 매칭 → 확인 멘트 → UI 확인 버튼 클릭, 매칭 실패 시 3회 한도 재캡처) | interest | (확정) 추종 / (거부) 대기 / (3회 매칭 실패) 대기 |
+| 추종 | 추종 대상 확정 | 노트북 웹캠 + 사람 추적 + 거리 제어 로 교사 추종 | happy | 대기 (Admin UI "정지" 클릭) / Searching (시야 로스트) |
 | Searching | 추종 대상 매칭 실패 또는 추종 중 시야 로스트 | 회전·이동·음성 호출 ("선생님?") 로 대상 재탐색 | interest | (재발견) 추종 / (타임아웃) 대기 |
-| 운반 중 | UI 목적지 선택 | 자율 주행 으로 nav graph 목적지로 이동 | interest | 도착 |
+| 운반 중 | Admin UI 목적지 선택 | 자율 주행 으로 nav graph 목적지로 이동 | interest | 도착 |
 | 도착 | 자율 주행 액션 완료 | 대기 상태로 전이 후 교사앱 토스트·사운드 + GogoPing 노트북 스피커 음성 알림 | happy | 대기 |
 | 정지 (전역 트리거) | 어느 단계에서든 UI "정지" 버튼 클릭 또는 호출어 + 정지 의도 발화 (호출어만 부르면 일시 정지 + 대답 후 직전 단계 재개) | 진행 동작 종료 → 대기 | basic | 대기 |
 
@@ -163,11 +164,15 @@ last_synced: "2026-05-04T00:17:21"
 
 ### 2.5 자장가
 
+> 구현 완료 — [implemented.md](implemented.md) 참조
+
+### 2.6 낮잠 시각 기록
+
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
-| SR-NAP-001 | 자장가 재생 | GogoPing UI (브라우저 `<audio>`) 가 사전 등록된 자장가 mp3 1곡을 재생한다. 종료는 §8.2 명령 인터페이스 (호출어 + 자연어 모드 전환) 로 처리. | High |
+| SR-NAP-002 | 낮잠 시각 기록 | GogoPing 이 낮잠 모드(자장가) 진입·종료 시각을 Control Server REST 로 전달하고, Control Server 가 DB `mode_history` 에 기록한다. AI Server 보고서 생성(SR-RPT-001) 시 해당 당일 낮잠 시작·종료 시각을 조회해 요약에 포함한다. | High |
 
-### 2.6 주행 안전 / 자가관리
+### 2.7 주행 안전 / 자가관리
 
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
@@ -176,7 +181,7 @@ last_synced: "2026-05-04T00:17:21"
 | SR-SAF-005 | 사람 근접 시 감속 | GogoPing 이 자율 주행 의 속도 제한 으로 사람 인접 거리에 따라 최대 속도를 스케일 다운한다. 모든 모드에서 항상 활성. | Low |
 | SR-REL-004 | 배터리 저하 복귀 | GogoPing 이 배터리 임계치 도달 시 비긴급 작업(추종 제외 모든 상태)을 cancel 하고 자율 주행 으로 충전소 (`charger`) 로 복귀한다. | Low |
 
-### 2.7 nav graph named pose 카탈로그
+### 2.8 nav graph named pose 카탈로그
 
 | key | 위치 | 사용 SR |
 | --- | --- | --- |
@@ -212,72 +217,86 @@ last_synced: "2026-05-04T00:17:21"
 | SR-CLEAN-003 | NoriArm 정리 | NoriArm 이 정리 모드에 진입해 Top 카메라 + 객체 인식 으로 쌓인 블럭과 5개 출발 위치 ROI 를 모니터링하고, 모방학습 정책 (정리 ACT) 으로 검출된 블럭을 색별 매칭 (사람 색 → 사람 ROI 빈 곳 / 로봇 색 → 로봇 ROI 빈 곳, SR-PLAY-003 과 동일 매핑) 으로 다시 옮긴다 (그리퍼 카메라로 픽업 직전 정밀 검증). | High |
 | SR-CLEAN-004 | NoriArm 정리 자동 종료 | 5개 출발 위치 ROI 가 모두 채워지면 정리 모드를 자동 종료한다. | High |
 
-## 4. Educator UI (PyQt5 데스크톱 앱, Control Service REST 경유)
+## 4. Admin UI (PyQt5 데스크톱 앱, 로봇 관제)
 
-### 4.1 등록
-
-| S ID | Name | Description | Priority |
-| --- | --- | --- | --- |
-| SR-REG-001 | 자녀 정보 입력 | 교사앱 등록 폼이 자녀의 이름·생년월일·반을 입력받아 모델 객체로 변환한다. | High |
-| SR-REG-002 | 학부모 정보 입력 | 교사앱 등록 폼이 자녀에 연결되는 학부모의 이름·이메일·연락처를 입력받아 자녀와 함께 한 트랜잭션으로 처리한다. 등록 시 초기 비밀번호를 자동 생성해 학부모 계정을 발급한다. | High |
-| SR-REG-003 | 입력 검증 | 교사앱이 입력 검증 으로 학부모·자녀 정보의 패턴·필수값·중복을 검증한다. | High |
-| SR-REG-005 | 얼굴 이미지 캡처 | 등록 카메라 + 이미지 처리 가 다양 각도(정면·측면·상하 회전) 15장을 캡처하고 블러·각도·조명 품질 필터 + anti-spoofing (liveness 검증) 을 적용한다. | High |
-
-### 4.2 출결
+### 4.1 로봇 상태 모니터링
 
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
-| SR-OPS-002 | 출결 보드 표시 | 교사앱(PyQt5)이 Control Service REST 로 attendance 를 조회해 `QTableView` 로 갱신 표시한다. | High |
-| SR-OPS-019 | 로봇 상태 표시 | 교사앱(PyQt5)이 Control Server WebSocket 채널 `/ws/robot-state` 를 `websocket-client` 라이브러리로 구독해 로봇별 상태 위젯 (위치·배터리·현재 모드·작업·도착 이벤트) 을 실시간 갱신 표시한다. 인증은 fastapi-users 세션 쿠키를 WebSocket handshake 헤더로 전달. | High |
+| SR-ADM-001 | 로봇 상태 표시 | Admin UI(PyQt5)가 Control Server WebSocket 채널 `/ws/robot-state` 를 `websocket-client` 라이브러리로 구독해 로봇별 상태 위젯 (위치·배터리·현재 모드·작업·도착 이벤트) 을 실시간 갱신 표시한다. 인증은 fastapi-users 세션 쿠키를 WebSocket handshake 헤더로 전달. | High |
 
-### 4.3 정보 보기
-
-| S ID | Name | Description | Priority |
-| --- | --- | --- | --- |
-| SR-OPS-014 | 점심메뉴 보기 | 교사앱이 DB `menu` 테이블을 조회해 달력 월간 위젯의 각 day-of-month 셀에 seed 메뉴를 매칭 표시한다. | Low |
-| SR-OPS-015 | 자녀 정보 보기 | 교사앱(PyQt5)이 Control Service REST 로 child 테이블을 조회해 자녀 기본 정보 (이름·생년월일·반·등록 사진) 를 표시한다. 등록 사진 binary 는 Control Server 가 발급한 짧은 TTL presigned URL 로 교사앱이 `requests.get(url)` 으로 MinIO 에서 직접 GET 한다. | Low |
-| SR-OPS-016 | 학부모 정보 보기 | 교사앱이 DB parent + parent_child 매핑 을 조회해 자녀 별 학부모 (이름·이메일·연락처) 를 표시한다. | Low |
-| SR-OPS-017 | 자녀 일일 보고서 보기 | 교사앱이 DB report 테이블을 조회해 자녀 별 일자별 일과 보고서를 표시한다. | Low |
-| SR-OPS-018 | 자녀 일일 보고서 편집 | 교사앱이 표시된 보고서 텍스트를 인라인 편집해 DB report 테이블에 UPDATE (body, edited_at) 한다. | Low |
-
-## 5. Parent Web (학부모 웹앱)
-
-### 5.1 로그인·계정
+### 4.2 보조 모드 관제
 
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
-| SR-PAR-006 | 학부모 로그인 | 학부모 웹앱이 이메일 + 비밀번호로 학부모 계정 로그인을 처리한다 (초기 비밀번호는 등록 시 자동 발급). | High |
-| SR-PAR-007 | 비밀번호 변경 | 학부모 웹앱이 학부모의 비밀번호 변경 요청을 받아 DB 에 저장한다. | Low |
+| SR-ADM-002 | 추종 대상 확정 UI | Admin UI 가 "추종 시작" 버튼 클릭 시 GogoPing 에 얼굴 캡처·매칭을 요청하고, 매칭 결과를 디스플레이에 표시한 뒤 "맞음" / "다시" 클릭으로 추종 대상을 확정한다. | High |
+| SR-ADM-003 | 보조 정지·재개 입력 | Admin UI 의 "정지" 버튼 클릭이 Control Server REST 로 정지 명령을 전달해 GogoPing 을 대기 상태로 전이시킨다. | High |
+| SR-ADM-004 | 지도 기반 목적지 지정 | Admin UI 가 SLAM 맵 + nav graph named pose 를 시각화한 지도 위젯을 표시하고, 관리자가 목적지를 클릭하면 named pose 를 Control Server REST 로 전달해 운반 요청을 보낸다. | High |
+| SR-ADM-005 | 도착 알림 수신 | Admin UI 가 SR-ADM-001 로봇 상태 위젯 갱신으로 GogoPing 목적지 도착을 인지하고 토스트 알림을 표시한다. | High |
 
-### 5.2 자녀 선택
+## 5. Portal Web (학부모·교사 공용 웹앱)
 
-| S ID | Name | Description | Priority |
-| --- | --- | --- | --- |
-| SR-PAR-008 | 자녀 선택 | 학부모 웹앱이 로그인한 학부모에 매핑된 자녀(다수) 리스트를 표시하고, 조회할 자녀를 선택한다. | High |
-
-### 5.3 등·하원 조회
+### 5.1 교사 — 등록
 
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
-| SR-PAR-001 | 등·하원 조회 | 학부모 웹앱이 선택된 자녀의 등·하원 상태를 DB 조회로 표시한다. | Low |
+| SR-REG-001 | 자녀 정보 입력 | Portal Web 등록 폼이 자녀의 이름·생년월일·반을 입력받아 모델 객체로 변환한다. | High |
+| SR-REG-002 | 학부모 정보 입력 | Portal Web 등록 폼이 자녀에 연결되는 학부모의 이름·이메일·연락처를 입력받아 자녀와 함께 한 트랜잭션으로 처리한다. 등록 시 초기 비밀번호를 자동 생성해 학부모 계정을 발급한다. | High |
+| SR-REG-003 | 입력 검증 | Portal Web 이 입력 검증으로 학부모·자녀 정보의 패턴·필수값·중복을 검증한다. | High |
+| SR-REG-005 | 얼굴 이미지 캡처 | Portal Web 이 브라우저 WebRTC 로 등록 카메라에 접근해 다양 각도(정면·측면·상하 회전) 15장을 캡처하고 블러·각도·조명 품질 필터 + anti-spoofing (liveness 검증) 을 적용한다. | High |
 
-### 5.4 메뉴
-
-| S ID | Name | Description | Priority |
-| --- | --- | --- | --- |
-| SR-PAR-004 | 점심메뉴 조회 | 학부모 웹앱이 달력 월간 위젯의 각 day-of-month 셀에 seed 메뉴를 매칭 표시한다. | Low |
-
-### 5.5 사진첩 조회
+### 5.2 교사 — 출결
 
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
-| SR-PHOTO-003 | 학부모 사진 조회 | 학부모 웹앱이 선택된 자녀가 포함된 positive 카테고리 사진을 표시하고 사진별 다운로드를 지원한다. 이미지 binary 는 Control Server 가 발급한 짧은 TTL presigned URL 로 학부모 브라우저가 Vite dev `/photos/*` proxy 경유로 MinIO 에서 직접 GET 한다. | Low |
+| SR-OPS-002 | 출결 보드 표시 | Portal Web 이 Control Service REST 로 attendance 를 조회해 갱신 표시한다. | High |
 
-### 5.6 일과 보고서 조회
+### 5.3 교사 — 정보 보기
 
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
-| SR-RPT-002 | 학부모 보고서 조회 | 학부모 웹앱이 선택된 자녀의 하루 일과 보고서 (교사 편집 반영된 최종본) 를 일별로 표시한다. | Low |
+| SR-OPS-014 | 점심메뉴 보기 | Portal Web 이 DB `menu` 테이블을 조회해 달력 월간 위젯의 각 day-of-month 셀에 seed 메뉴를 매칭 표시한다. | Low |
+| SR-OPS-015 | 자녀 정보 보기 | Portal Web 이 Control Service REST 로 child 테이블을 조회해 자녀 기본 정보 (이름·생년월일·반·등록 사진) 를 표시한다. 등록 사진 binary 는 Control Server 가 발급한 짧은 TTL presigned URL 로 브라우저가 MinIO 에서 직접 GET 한다. | Low |
+| SR-OPS-016 | 학부모 정보 보기 | Portal Web 이 DB parent + parent_child 매핑을 조회해 자녀별 학부모 (이름·이메일·연락처) 를 표시한다. | Low |
+| SR-OPS-017 | 자녀 일일 보고서 보기 | Portal Web 이 DB report 테이블을 조회해 자녀별 일자별 일과 보고서를 표시한다. | Low |
+| SR-OPS-018 | 자녀 일일 보고서 편집 | Portal Web 이 표시된 보고서 텍스트를 인라인 편집해 DB report 테이블에 UPDATE (body, edited_at) 한다. | Low |
+
+### 5.4 학부모 — 로그인·계정
+
+| S ID | Name | Description | Priority |
+| --- | --- | --- | --- |
+| SR-PAR-006 | 학부모 로그인 | Portal Web 이 이메일 + 비밀번호로 학부모 계정 로그인을 처리한다 (초기 비밀번호는 등록 시 자동 발급). | High |
+| SR-PAR-007 | 비밀번호 변경 | Portal Web 이 학부모의 비밀번호 변경 요청을 받아 DB 에 저장한다. | Low |
+
+### 5.5 학부모 — 자녀 선택
+
+| S ID | Name | Description | Priority |
+| --- | --- | --- | --- |
+| SR-PAR-008 | 자녀 선택 | Portal Web 이 로그인한 학부모에 매핑된 자녀(다수) 리스트를 표시하고, 조회할 자녀를 선택한다. | High |
+
+### 5.6 학부모 — 등·하원 조회
+
+| S ID | Name | Description | Priority |
+| --- | --- | --- | --- |
+| SR-PAR-001 | 등·하원 조회 | Portal Web 이 선택된 자녀의 등·하원 상태를 DB 조회로 표시한다. | Low |
+
+### 5.7 학부모 — 메뉴
+
+| S ID | Name | Description | Priority |
+| --- | --- | --- | --- |
+| SR-PAR-004 | 점심메뉴 조회 | Portal Web 이 달력 월간 위젯의 각 day-of-month 셀에 seed 메뉴를 매칭 표시한다. | Low |
+
+### 5.8 학부모 — 사진첩 조회
+
+| S ID | Name | Description | Priority |
+| --- | --- | --- | --- |
+| SR-PHOTO-003 | 학부모 사진 조회 | Portal Web 이 선택된 자녀가 포함된 positive 카테고리 사진을 표시하고 사진별 다운로드를 지원한다. 이미지 binary 는 Control Server 가 발급한 짧은 TTL presigned URL 로 브라우저가 Vite dev `/photos/*` proxy 경유로 MinIO 에서 직접 GET 한다. | Low |
+
+### 5.9 학부모 — 일과 보고서 조회
+
+| S ID | Name | Description | Priority |
+| --- | --- | --- | --- |
+| SR-RPT-002 | 학부모 보고서 조회 | Portal Web 이 선택된 자녀의 하루 일과 보고서 (교사 편집 반영된 최종본) 를 일별로 표시한다. | Low |
 
 ## 6. Control Server / DB (백엔드)
 
@@ -303,7 +322,7 @@ last_synced: "2026-05-04T00:17:21"
 
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
-| SR-COM-001 | 로봇 상태 발행 | 각 로봇 state publisher 가 1Hz ROS2 토픽 `/eduping/state` · `/gogoping/state` · `/noriarm/state` (로봇별 namespace) 로 위치·배터리·현재 작업·운반 액션 결과를 publish 하고 Control Server 가 세 토픽을 모두 구독·수집한 뒤 WebSocket 채널 `/ws/robot-state` 로 교사앱에 push 한다 (SR-OPS-019). | High |
+| SR-COM-001 | 로봇 상태 발행 | 각 로봇 state publisher 가 1Hz ROS2 토픽 `/eduping/state` · `/gogoping/state` · `/noriarm/state` (로봇별 namespace) 로 위치·배터리·현재 작업·운반 액션 결과를 publish 하고 Control Server 가 세 토픽을 모두 구독·수집한 뒤 WebSocket 채널 `/ws/robot-state` 로 Admin UI 에 push 한다 (SR-ADM-001). | High |
 | SR-COM-002 | 작업 명령 전달 | Control Server 가 ROS2 service/action 표준 인터페이스(.srv/.action) 로 각 로봇에 작업 명령을 전달한다. | High |
 
 ### 6.4 신뢰성
@@ -342,7 +361,7 @@ last_synced: "2026-05-04T00:17:21"
 
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
-| SR-RPT-001 | 일과 보고서 생성 | AI Server worker 가 `ai_job(kind=report)` 큐에서 작업을 픽업해 해당 child_id 의 하루치 사진 메타데이터 (SR-PHOTO-004 의 시각·감정 카테고리·모드·트리거 child_id) · 모드 이력 (SR-DAT-009 mode_history) · 당일 점심메뉴 (SR-DAT-007 menu) 를 로컬 LLM (Qwen 2.5 3B, 의도 분류 LLM 과 모델 공유) 으로 자연어 요약해 DB report 테이블에 저장한다. enqueue 는 SR-OUT-006 하원 시각 기록 시점에 Control Server 가 처리한다. | Low |
+| SR-RPT-001 | 일과 보고서 생성 | AI Server worker 가 `ai_job(kind=report)` 큐에서 작업을 픽업해 해당 child_id 의 하루치 사진 메타데이터 (SR-PHOTO-004 의 시각·감정 카테고리·모드·트리거 child_id) · 모드 이력 (SR-DAT-009 mode_history, 낮잠 시작·종료 시각 포함) · 당일 점심메뉴 (SR-DAT-007 menu) 를 로컬 LLM (Qwen 3 4B, 의도 분류 LLM 과 모델 공유) 으로 자연어 요약해 DB report 테이블에 저장한다. enqueue 는 SR-OUT-006 하원 시각 기록 시점에 Control Server 가 처리한다. | Low |
 
 ### 7.3 비동기 작업 큐
 
@@ -355,9 +374,7 @@ last_synced: "2026-05-04T00:17:21"
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
 | SR-VOICE-001 | 음성 입력 수신 | 각 로봇 UI (브라우저) 가 호출어 감지 신호 후 마이크 음성을 캡처해 클라이언트 측에서 텍스트로 변환한 뒤 Vite dev server `server.proxy` 를 통해 Control Service `/api/voice/intent` 에 텍스트를 전송한다. Control Service 가 AI Hub (의도 분류 LLM) 호출 후 결과에 따라 ROS2 명령을 publish 한다. | High |
-| SR-VOICE-002 | 음성 인식 (STT) | 각 로봇 UI (브라우저) 가 Web Speech API (`webkitSpeechRecognition`, ko-KR) 로 음성을 텍스트로 변환한다 (클라이언트 측, 서버 STT 미사용). | High |
-| SR-VOICE-003 | 의도 분류 | AI Server 가 의도 분류 LLM 으로 텍스트의 의도(모드 전환 / 모드 내 서브 명령)를 분류한다. 분류되지 않는 발화는 무시한다. | High |
-| SR-VOICE-005 | 음성 출력 (TTS) | 각 로봇 UI (브라우저) 가 `window.speechSynthesis` API (ko-KR voice) 로 응답 텍스트를 음성으로 출력한다 (클라이언트 측, 서버 TTS 미사용). | High |
+| SR-VOICE-004 | 잡담 응답 | AI Hub 가 SR-VOICE-003 의도 분류 결과가 mode_change·sub_command 어디에도 해당하지 않을 때 동일 LLM (Qwen3 4B) 으로 한국어 1~2문장 자연어 응답을 생성해 `/api/voice/intent` 응답에 `{kind: "chat", reply: "..."}` 로 돌려주고, 로봇 UI 가 받은 reply 를 SR-VOICE-005 TTS 로 음성 출력한다. 모드·구동기 상태는 변경하지 않는다. 응답 LLM 호출이 실패하면 `{kind: "ignored"}` 로 graceful fallback 한다. | High |
 
 ## 8. 다중 UI 공통
 
@@ -371,17 +388,15 @@ last_synced: "2026-05-04T00:17:21"
 
 | S ID | Name | Description | Priority |
 | --- | --- | --- | --- |
-| SR-VOICE-007 | 호출어 인식 | 각 로봇 UI 가 Web Speech API STT 항상 듣기 모드로 텍스트 스트림을 모니터링하다 자기 이름 호출어("에듀핑" / "고고핑" / "노리암") 단어 매칭 시 즉시 진행 중인 동작을 일시 정지하고 음성으로 대답한 뒤 후속 명령 수신 윈도우 (5초) 를 활성화한다. 호출어와 명령이 같은 발화에 포함된 경우 (예: "에듀핑, 정리정돈 시작해") 는 호출어 직후 텍스트를 그대로 명령으로 처리하고 별도 윈도우 대기 없이 즉시 의도 분류로 전달한다. | High |
 | SR-UI-002 | UI 모드·명령 클릭 선택 | 각 로봇 UI 가 현재 UI 가 지원하는 모드 버튼·명령 버튼을 상시 노출하고, 클릭 시 자연어 명령과 동등한 효과로 ROS2 토픽·서비스를 발행한다. | High |
 | SR-OPS-001 | 모드 전환 | 호출어 후속 자연어 모드 전환 명령 또는 UI 모드 버튼 클릭이 해당 로봇의 ROS2 latched 토픽 (`/eduping/mode` · `/gogoping/mode` · `/noriarm/mode` 중 하나) 를 발행하고 그 로봇의 노드들이 자기 namespace 의 mode 토픽만 구독해 모드를 적용한다. 로봇 간 모드는 독립적이다. | High |
 | SR-OPS-011 | 모드 내 자연어 명령 | 호출어 후속 자연어 명령을 의도 분류 LLM 으로 현재 모드의 서브 명령 (정지·진행·대상·목적지 등) 으로 라우팅한다. UI 클릭과 동등한 효과. | High |
 | SR-OPS-013 | 보조 모드 음성 입력 제한 | GogoPing 이 보조 모드에 진입한 동안 호출어 인식 시 일시 정지 + 음성 대답하지만, 후속 명령은 정지 의도("정지" / "멈춰" 등) 만 받아 대기 상태로 전이시키고, 그 외 명령(모드 전환·목적지 등)은 무시하고 일시 정지를 해제해 직전 동작을 재개한다. 모드 전환·운반 명령 등은 교사앱 UI 클릭으로만 가능. 음성 출력(안내·도착 알림 등)은 정상. | High |
+| SR-UI-003 | 음성·타이핑 모드 토글 / 음성 시각 피드백 / barge-in | Robot UI 하단 영역이 voice store 의 `voiceMode: 'voice' | 'text'` 토글 상태에 따라 두 가지로 분기된다. ① **text 모드** — 기존 `CommandBar`(입력창 + 전송 버튼) 노출, 호출어 없이 타이핑한 명령을 즉시 dispatch (`useVoiceController.processCommand` 의 wake-word-bypass 경로). STT 는 정지. ② **voice 모드** — STT 가 항상 떠 호출어 대기, `listening`(호출어 감지 후 5초 윈도우) 동안 Siri-like 몽글몽글 애니메이션(`SiriBlob.vue` — 색 블롭 3개를 morphing border-radius + translate keyframe 으로 흐르게 하고, `useAudioLevel` composable 이 `getUserMedia` + `AnalyserNode` 로 마이크 RMS 레벨을 받아 블롭 wrapper 의 transform scale 에 반영) + STT 인식 텍스트 자막(`VoiceCaption.vue`) 표시, `dispatching` 동안 dot wave 로딩(`DispatchingLoader.vue`) + 마지막 발화 자막 표시. 진행 중 호출어가 다시 들리면 `AbortController` 로 in-flight `/api/voice/intent` fetch 를 abort + `tts.cancel()` 후 즉시 새 `wake_detected` 로 전환 (barge-in). `useVoiceController` 의 호출어 매칭 게이트를 `idle` 외 모든 상태로 확장. 모드 토글 버튼은 하단 영역 우측에 마이크/키보드 아이콘으로 노출. | High |
 
 ### 8.3 표정 상시 표시 (모든 로봇 UI)
 
-| S ID | Name | Description | Priority |
-| --- | --- | --- | --- |
-| SR-UI-001 | 표정 상시 표시 | 각 로봇 UI 가 외부 패키지 `pinky_emotion` 의 GIF (basic·hello·happy·fun·interest·bored·sad·angry·sleeping) 를 현재 모드·이벤트에 따라 디스플레이에 상시 재생한다. | High |
+> 구현 완료 — [implemented.md](implemented.md) 참조
 
 ### 8.4 사진 자연 캡처 (모든 로봇 UI, 놀이 모드 한정)
 
